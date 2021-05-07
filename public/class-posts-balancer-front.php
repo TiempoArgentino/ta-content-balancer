@@ -194,7 +194,7 @@ class Posts_Balancer_Front
         ));
     }
 
-    public function show_interest_post($user_id,$post_id,$icon1,$icon2,$icon3)
+    public function show_interest_post($user_id,$post_id,$icon1=null,$icon2=null,$icon3=null)
     {
 
         if(!$user_id || !$post_id){
