@@ -1,6 +1,8 @@
 (function ($) {
   $(document).ready(function () {
-    if (localStorage.getItem("balancer_data") === null) {
+    
+    if (localStorage.getItem("balancer_data") === "null") {
+      localStorage.removeItem("balancer_data");
       $.ajax({
         type: "post",
         url: balancer_anon_ajax.url,
@@ -37,8 +39,12 @@
             //console.log(res);
           }
         });
-      });;
+      });
     } else {
+      console.log('estoy en el segundo');
+      if(localStorage.getItem("balancer_data") === "null") {
+        localStorage.removeItem("balancer_data");
+      }
       $.ajax({
         type: "post",
         url: balancer_anon_ajax_get.url,
