@@ -353,7 +353,7 @@ class Posts_Balancer_Local_Storage
               $tags = is_user_logged_in() && get_user_meta( wp_get_current_user()->ID, '_personalizer_posts',true ) !== '' ? get_user_meta( wp_get_current_user()->ID, '_personalizer_posts',true ) : array_values($_POST['balancer_data']['anonInfo']['tags']);
             
 
-
+                
                 $args = [
                     'post_type' => get_option('balancer_editorial_post_type'),
                     'numberposts' => 4,
@@ -374,14 +374,15 @@ class Posts_Balancer_Local_Storage
                     'field' => 'term_id',
                     'terms' => $cats
                 ];
-                
-                $args['tax_query'][] =  [
+
+                if(key_exists('authors',$_POST['balancer_data']['anonInfo'])){
+                    $args['tax_query'][] =  [
                         'taxonomy' => get_option('balancer_editorial_autor'),
                         'field' => 'term_id',
                         'terms' => array_values($_POST['balancer_data']['anonInfo']['authors'])
     
                     ];
-            
+                }
 
                 $args['tax_query'][] =  [
                     'taxonomy' => get_option('balancer_editorial_tags'),
