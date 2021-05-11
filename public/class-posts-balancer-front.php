@@ -1,23 +1,28 @@
 <?php
+global $post_balancer_front_offset;
+$post_balancer_front_offset = 0;
 
 class Posts_Balancer_Front
 {
-
+    public $offset = 0;
     public $session_posts = 'balancer_storage_posts';
     public $session_author = 'balancer_storage_author';
     public $session_tax = 'balancer_storage_tax';
     public $session_tag = 'balancer_storage_tag';
 
     public function __construct()
-    { 
+    {
         add_action('template_redirect', [$this, 'show_interest']);
         add_action('rest_api_init', [$this, 'show_tags']);
     }
+
     /**
      * balancer
+     *  @param int $number                                                      The amount of posts to fetch from the balancer
+     *  @param bool $use_offset                                                 Indicates if the global offset should be used to avoid fetching
+     *                                                                          posts that had already been used.
      */
-
-    public function balancer($number = 6)
+    public function balancer($number = 6, $use_offset = true)
     {
         $num = intval($number);
 
@@ -29,7 +34,7 @@ class Posts_Balancer_Front
         * The sum of the 3 has to be 100, validation in settings,
         * if the user is not logged in add what is missing for the other two
         */
-        
+
         $user_posts = $this->post_user_count($user) !== null ? $this->post_user_count($user) : []; //return a empty array if $user is empty or in zero
 
         if($user_posts === null || sizeof($user_posts) == 0) { //missing for other two
@@ -46,9 +51,9 @@ class Posts_Balancer_Front
          */
         $posts_id = array_merge($view_posts,$user_posts); //merge ID's
         $query = array_merge($posts_id,$editorial_posts);
-        
+
         //return $query;
-        
+
         $args = [
             'post_type' => get_option('balancer_editorial_post_type'),
             'status' => 'publish',
@@ -56,6 +61,12 @@ class Posts_Balancer_Front
             'numberposts' => $num,
             'fields' => 'ids'
         ];
+
+        if($use_offset){
+            global $post_balancer_front_offset;
+            $args['offset'] = $post_balancer_front_offset;
+            $post_balancer_front_offset += $num;
+        }
 
         return get_posts( $args ); //return post ID's
 
@@ -76,11 +87,11 @@ class Posts_Balancer_Front
                 ],
                 'fields' => 'ids',
             ];
-    
+
             $query = get_posts($args);
             return $query;
         }
-       
+
     }
 
     public function post_user_count($number) //user preference, this function maybe return 0 post by exclution
@@ -121,7 +132,7 @@ class Posts_Balancer_Front
                 return $query;
             }
 
-            
+
         }
     }
     /**
@@ -152,11 +163,11 @@ class Posts_Balancer_Front
                 ],
                 'fields' => 'ids'
             ];
-    
+
             $query = get_posts($args);
             return $query;
         }
-        
+
     }
 
 
@@ -172,7 +183,7 @@ class Posts_Balancer_Front
                 return $query;
             }
         }
-       
+
     }
 
     public function show_front_tags()
@@ -203,8 +214,8 @@ class Posts_Balancer_Front
 
         $location = get_user_meta($user_id,'_personalizer_location',true);
         $authors = get_user_meta($user_id,'_personalizer_authors',true);
-        $topics = get_user_meta($user_id,'_personalizer_topics',true);   
-        
+        $topics = get_user_meta($user_id,'_personalizer_topics',true);
+
         $post_location = get_the_terms($post_id,'ta_article_place');
         $post_authors = get_the_terms($post_id,'ta_article_author');
         $post_topics = get_the_terms($post_id,'ta_article_tema');
@@ -227,13 +238,13 @@ class Posts_Balancer_Front
 
         if(is_user_logged_in()):
             $icons = '<div class="icons-container">
-                <div class="article-icons d-flex flex-column position-absolute">';
+                <div class="article-icons d-flex flex-column mb-2">';
              if($post_location[0]->{'name'} === $location):
                   $icons .= '<img src="'.$icon1.'" alt="" />';
              endif;
              if($topics_compare !== '' && sizeof($topics_compare) > 0):
                  $icons .= '<img src="'.$icon2.'" alt="" />';
-             endif; 
+             endif;
              if($authors_compare !== '' && sizeof($authors_compare) > 0) :
                  $icons .= '<img src="'.$icon3.'" alt="" />';
              endif;
@@ -241,7 +252,7 @@ class Posts_Balancer_Front
             </div>';
             echo $icons;
         endif;
-        
+
     }
 
 }
