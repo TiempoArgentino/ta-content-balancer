@@ -1,10 +1,7 @@
 <?php
-global $post_balancer_front_offset;
-$post_balancer_front_offset = 0;
-
 class Posts_Balancer_Front
 {
-    public $offset = 0;
+    static public $offset = 0;
     public $session_posts = 'balancer_storage_posts';
     public $session_author = 'balancer_storage_author';
     public $session_tax = 'balancer_storage_tax';
@@ -63,9 +60,10 @@ class Posts_Balancer_Front
         ];
 
         if($use_offset){
-            global $post_balancer_front_offset;
-            $args['offset'] = $post_balancer_front_offset;
-            $post_balancer_front_offset += $num;
+            if(self::$offset)
+                $args['offset'] = self::$offset;
+
+            self::$offset += $num;
         }
 
         return get_posts( $args ); //return post ID's
