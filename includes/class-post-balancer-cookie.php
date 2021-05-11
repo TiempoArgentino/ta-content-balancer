@@ -45,8 +45,10 @@ class Post_Balancer_Cookie
             // setcookie('user[posts]', json_encode($array['posts']), time()+86400,'/');
             // setcookie('user[authors]', json_encode($array['authors']), time()+86400,'/');
             
+           if(isset($_COOKIE['user'])) {
+            echo $_COOKIE['user']['cats'];
+           }
            
-           echo $_COOKIE['user']['cats'];
     }
 }
 

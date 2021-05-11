@@ -1,7 +1,7 @@
 (function ($) {
   $(document).ready(function () {
-    
-    if (localStorage.getItem("balancer_data") === "null") {
+    console.log(typeof localStorage.getItem("balancer_data"));
+    if (localStorage.getItem("balancer_data") === "null" || typeof localStorage.getItem("balancer_data") === 'object') {
       localStorage.removeItem("balancer_data");
       $.ajax({
         type: "post",
@@ -42,7 +42,7 @@
       });
     } else {
       console.log('estoy en el segundo');
-      if(localStorage.getItem("balancer_data") === "null") {
+      if(localStorage.getItem("balancer_data") === "null" || typeof localStorage.getItem("balancer_data") === 'object') {
         localStorage.removeItem("balancer_data");
       }
       $.ajax({

@@ -19,7 +19,7 @@ class Posts_Balancer_Session
      /**
      * https://www.php.net/manual/es/function.setcookie.php
      */
-    public function set_cookie($name, $value, $expire = 0, $path, $domain, $secure = true, $httponly = false)
+    public function set_cookie($name, $value, $expire, $path, $domain, $secure = true, $httponly = false)
     {
        if(!headers_sent()){
            setcookie($name, $value, $expire, $path, $domain, $secure, $httponly);

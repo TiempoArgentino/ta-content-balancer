@@ -30,10 +30,11 @@ class Posts_Balancer_Posts
     public function set_view()
     {
         global $post;
-        $count = get_post_meta($post->ID, 'ta_article_count', true);
-        $ip = get_post_meta($post->ID, 'ta_article_visit_ip', true);
 
         if (is_single() && $post->post_type === 'ta_article') {
+
+            $count = get_post_meta($post->ID, 'ta_article_count', true);
+            $ip = get_post_meta($post->ID, 'ta_article_visit_ip', true);
 
             if ($this->get_user_ip() !== $ip || $ip == '' || !$ip) {
                 if ($count == '') {
