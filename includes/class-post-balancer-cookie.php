@@ -4,51 +4,71 @@ class Post_Balancer_Cookie
 {
     public function __construct()
     {
-        add_action('wp',[$this,'init_cookie']);
+        add_action('wp', [$this, 'init_cookie']);
+        add_action('template_redirect',[$this,'balancer_cookie'],9999);
     }
 
     public function init_cookie()
-    {              
+    {
+        if (!isset($_COOKIE['balancer'])) {
+            setcookie('balancer', uniqid() . date('YmdHmi'), time() + 86400, '/');           
+        }        
+    }
+
+    public function populate_cookie()
+    {
+        if (isset($_COOKIE['balancer'])) {
+            $result = posts_balancer_db()->get_data_row($_COOKIE['balancer'],'id_session','balancer_session');
+            if($result == null) {
+                 $data = [
+                    'id_session' => $_COOKIE['balancer'],
+                    'content' => ''
+                ];
+
+                $insert = posts_balancer_db()->insert_data('balancer_session',$data,['%s','%s']);
+                return $insert;
+            }           
+        }
+    }
+
+    public function balancer_cookie()
+    {
+       
+        if (is_single()) {
+
+            if(!$this->populate_cookie()){
+                $this->populate_cookie();
+            }
+
             $post_id = get_queried_object_id();
-            $categories = get_the_terms($post_id,get_option('balancer_editorial_taxonomy'));
-            $authors = get_the_terms($post_id,get_option('balancer_editorial_autor'));
+            $categories = get_the_terms($post_id, get_option('balancer_editorial_taxonomy'));
+            $authors = get_the_terms($post_id, get_option('balancer_editorial_autor'));
             $cat = [];
-
- 
-
-            if($categories != null) {
-                foreach($categories as $c) {
+            if ($categories != null) {
+                foreach ($categories as $c) {
                     $cat[] = $c->term_id;;
                 }
             } else {
                 $cat[] = '';
             }
             $author = [];
-           if($authors != null) {
-                
-                foreach($authors as $a) {
+            if ($authors != null) {
+
+                foreach ($authors as $a) {
                     $author[] = $a->term_id;
                 }
             } else {
                 $author[] = '';
             }
 
-            $terms_string = join(', ', wp_list_pluck($categories, 'name'));
-           
-
             $array = [];
 
-            $array['posts'] = [$post_id]; 
-            $array['cats'] = $cat;
-            $array['authors'] = $author;
-            setcookie('ta_cookie', $terms_string, time()+86400,'/');
-            // setcookie('user[posts]', json_encode($array['posts']), time()+86400,'/');
-            // setcookie('user[authors]', json_encode($array['authors']), time()+86400,'/');
-            
-           if(isset($_COOKIE['user'])) {
-            echo $_COOKIE['user']['cats'];
-           }
-           
+            $array['info']['posts'] = [$post_id]; 
+            $array['info']['cats'] = $cat;
+            $array['info']['authors'] = $author;
+
+            posts_balancer_db()->update_data('balancer_session',['content' => json_encode($array)],['id_session'=>$_COOKIE['balancer']],['%s'],['%s']);
+        }
     }
 }
 

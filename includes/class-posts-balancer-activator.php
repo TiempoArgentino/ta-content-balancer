@@ -35,6 +35,7 @@ class Posts_Balancer_Activator
 
 		self::create_table_favorites();
 		self::create_default_pages();
+		self::create_table_session();
 
 		add_action('init', [self::class, 'flush']);
 	}
@@ -66,6 +67,15 @@ class Posts_Balancer_Activator
 		$ads_table = 'favorites';
 
 		$sql =  ' ( `ID` INT NOT NULL AUTO_INCREMENT , `user_id` INT(11) NOT NULL , `id_post` INT(11) NOT NULL , PRIMARY KEY (`ID`))';
+
+		self::create_tables($ads_table, $sql);
+	}
+
+	public static function create_table_session()
+	{
+		$ads_table = 'balancer_session';
+
+		$sql =  ' ( `id` INT NOT NULL AUTO_INCREMENT , `user_id` INT(11) NULL , `id_session` VARCHAR(255) NOT NULL , `content` TEXT NOT NULL, PRIMARY KEY (`id`))';
 
 		self::create_tables($ads_table, $sql);
 	}

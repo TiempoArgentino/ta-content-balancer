@@ -22,14 +22,13 @@ class Posts_Balancer_Front
      *  @param bool $use_offset                                                 Indicates if the global offset should be used to avoid fetching
      *                                                                          posts that had already been used.
      */
-    public function balancer($number = 6, $use_offset = true)
+    public function balancer(int $number = 6, $use_offset = true)
     {
-        $num = intval($number);
-
-        $view = round(($num * intval(get_option('_balancer_percent_views'))) / 100);
-        $user = round(($num * intval(get_option('_balancer_percent_user'))) / 100);
-        $editorial = round(($num * intval(get_option('_balancer_percent_editorial'))) / 100);
-
+        
+        $view = round(($number * intval(get_option('_balancer_percent_views'))) / 100);
+        $user = round(($number * intval(get_option('_balancer_percent_user'))) / 100);
+        $editorial = round(($number * intval(get_option('_balancer_percent_editorial'))) / 100);
+       
        /**
         * The sum of the 3 has to be 100, validation in settings,
         * if the user is not logged in add what is missing for the other two
@@ -43,42 +42,47 @@ class Posts_Balancer_Front
 
         }
 
-        $editorial_posts = $this->post_count($editorial) !== null ? $this->post_count($editorial) : [];
+        $editorial_posts = $this->post_count() !== null ? $this->post_count() : [];
         $view_posts = $this->post_most_view_count($view) !== null ? $this->post_most_view_count($view) : [];
 
+        
         /**
          * if most view and user preference is not empty
          */
         $posts_id = array_merge($view_posts,$user_posts); //merge ID's
         $query = array_merge($posts_id,$editorial_posts);
 
-        //return $query;
 
         $args = [
             'post_type' => get_option('balancer_editorial_post_type'),
             'status' => 'publish',
             'include' => $query,
-            'numberposts' => $num,
-            'fields' => 'ids'
+            'numberposts' => $number,
+            'fields' => 'ids',
+            'date_query' => [
+                [
+                    'column' => 'post_date_gmt',
+                    'after'  => get_option('balancer_editorial_days') . ' days ago',
+                ]
+            ],
         ];
 
         if($use_offset){
             global $post_balancer_front_offset;
             $args['offset'] = $post_balancer_front_offset;
-            $post_balancer_front_offset += $num;
+            $post_balancer_front_offset += $number;
         }
 
+        var_dump(get_posts( $args ));
         return get_posts( $args ); //return post ID's
 
     }
 
-    public function post_count($number) //editorial
+    public function post_count() //editorial
     {
-        if($number > 0) {
-            $args = [
+        $args = [
                 'post_type' => get_option('balancer_editorial_post_type'),
                 'status' => 'publish',
-                'numberposts' => $number,
                 'date_query' => [
                     [
                         'column' => 'post_date_gmt',
@@ -90,8 +94,6 @@ class Posts_Balancer_Front
 
             $query = get_posts($args);
             return $query;
-        }
-
     }
 
     public function post_user_count($number) //user preference, this function maybe return 0 post by exclution
@@ -111,7 +113,7 @@ class Posts_Balancer_Front
                     'post_type' => get_option('balancer_editorial_post_type'),
                     'status' => 'publish',
                     'numberposts' => $number,
-                    'exclude' => $this->post_count($number),
+                    'exclude' => $this->post_count(),
                     'tax_query' => [
                         [
                             'taxonomy' => get_option('balancer_editorial_taxonomy'),
@@ -146,7 +148,7 @@ class Posts_Balancer_Front
                 'orderby' => ['ta_article_count' => 'DESC'],
                 'status' => 'publish',
                 'numberposts' => $number,
-                'exclude' => $this->post_count($number),
+                'exclude' => $this->post_count(),
                 'meta_query' => [
                     [
                         'key' => 'ta_article_count',

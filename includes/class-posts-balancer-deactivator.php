@@ -39,7 +39,7 @@ class Posts_Balancer_Deactivator
 	public static function delete_tables()
 	{
 		global $wpdb;
-		$table_name = $wpdb->prefix . 'favorites';
+		$table_name = $wpdb->prefix . 'favorites, '. $wpdb->prefix . 'balancer_session';
 		$sql = 'DROP TABLE IF EXISTS ' . $table_name;
 		$wpdb->query($sql);
 	}

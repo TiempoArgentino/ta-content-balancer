@@ -66,7 +66,7 @@ class Posts_Balancer_DB
         global $wpdb;
         $table_name = $wpdb->prefix . $table;
         $results = $wpdb->get_results(
-            $wpdb->prepare("SELECT * FROM " . $table_name . " WHERE " . $where . "=%d", $id)
+            $wpdb->prepare("SELECT * FROM " . $table_name . " WHERE " . $where . "=%s", $id)
         );
         return $results;
     }
