@@ -6,7 +6,7 @@ class Post_Balancer_Cookie
     {
         add_action('wp', [$this, 'init_cookie']);
         add_action('template_redirect',[$this,'balancer_cookie'],999);
-        add_action('template_redirect', [$this,'dump'],9999);
+       // add_action('template_redirect', [$this,'dump'],9999);
     }
 
     public function init_cookie()
