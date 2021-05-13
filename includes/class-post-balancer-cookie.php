@@ -97,7 +97,8 @@ class Post_Balancer_Cookie
                     $new_cat = array_diff($user_data['info']['cats'], $data['info']['cats']);
                     $data['info']['cats'] = array_merge($new_cat,$data['info']['cats']);
                 }
-                if($array['info']['authors']) {
+                
+                if($user_data['info']['authors']) {
                     if(array_diff($array['info']['authors'], $data['info']['authors']) > 0) {
                         $new_author = array_diff($user_data['info']['authors'], $data['info']['authors']);
                         $data['info']['authors'] = array_merge($new_author,$data['info']['authors']);
