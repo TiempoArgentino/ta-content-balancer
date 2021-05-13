@@ -6,7 +6,7 @@ class Post_Balancer_Cookie
     {
         add_action('wp', [$this, 'init_cookie']);
         add_action('template_redirect',[$this,'balancer_cookie'],999);
-        //add_action('template_redirect', [$this,'dump'],9999);
+        add_action('template_redirect', [$this,'dump'],9999);
     }
 
     public function init_cookie()
@@ -57,22 +57,17 @@ class Post_Balancer_Cookie
                 $cat[] = '';
             }
             $author = [];
-            if ($authors != null) {
-
+ 
+            if ($authors) {
                 foreach ($authors as $a) {
                     $author[] = $a->term_id;
                 }
-            } else {
-                $author = false;
-            }
-
+            } 
             $array = [];
 
             $array['info']['posts'] = [$post_id]; 
             $array['info']['cats'] = $cat;
-            if($author) {
-                $array['info']['authors'] = $author;
-            }
+            $array['info']['authors'] = $author;
             
 
             //**add info */
@@ -83,29 +78,31 @@ class Post_Balancer_Cookie
             if($data->{'content'} === '') {
                 posts_balancer_db()->update_data('balancer_session',['content' => maybe_serialize($array)],['id_session'=>$_COOKIE['balancer']],['%s'],['%s']);
             } else {
-                $data = [];
-                $data['info']['posts'] = [$post_id];
-                $data['info']['cats'] = $cat;
-                $data['info']['authors'] = $author;
+                $new_data = [];
+                $new_data['info']['posts'] = [$post_id];
+                $new_data['info']['cats'] = $cat;
+                $new_data['info']['authors'] = $author;
 
-                if(array_diff($user_data['info']['posts'],$data['info']['posts']) > 0){ //ad new post id
-                    $new_id = array_diff($user_data['info']['posts'],$data['info']['posts']);
-                    $data['info']['posts'] = array_merge($new_id,$data['info']['posts']);    
+                if(array_diff($user_data['info']['posts'],$new_data['info']['posts']) > 0){ //ad new post id
+                    $new_id = array_diff($user_data['info']['posts'],$new_data['info']['posts']);
+                    $new_data['info']['posts'] = array_merge($new_id,$new_data['info']['posts']);    
                 }
 
-                if(array_diff($user_data['info']['cats'], $data['info']['cats']) > 0) {
-                    $new_cat = array_diff($user_data['info']['cats'], $data['info']['cats']);
-                    $data['info']['cats'] = array_merge($new_cat,$data['info']['cats']);
+                if(array_diff($user_data['info']['cats'], $new_data['info']['cats']) > 0) {
+                    $new_cat = array_diff($user_data['info']['cats'], $new_data['info']['cats']);
+                    $new_data['info']['cats'] = array_merge($new_cat,$new_data['info']['cats']);
                 }
-                
-                if($user_data['info']['authors']) {
-                    if(array_diff($array['info']['authors'], $data['info']['authors']) > 0) {
-                        $new_author = array_diff($user_data['info']['authors'], $data['info']['authors']);
-                        $data['info']['authors'] = array_merge($new_author,$data['info']['authors']);
-                    }
+
+                if($authors) {
+                    if(array_diff($user_data['info']['authors'], $new_data['info']['authors']) > 0) {
+                        $new_author = array_diff($user_data['info']['authors'], $new_data['info']['authors']);
+                        $new_data['info']['authors'] = array_merge($new_author,$new_data['info']['authors']);
+                    } 
+                } else if($user_data['info']['authors']) {
+                    $new_data['info']['authors'] = $user_data['info']['authors'];
                 }
                
-                posts_balancer_db()->update_data('balancer_session',['content' => maybe_serialize($data)],['id_session'=>$_COOKIE['balancer']],['%s'],['%s']);
+               posts_balancer_db()->update_data('balancer_session',['content' => maybe_serialize($new_data)],['id_session'=>$_COOKIE['balancer']],['%s'],['%s']);
             }
         }
     }
