@@ -1,6 +1,5 @@
 (function ($) {
   $(document).ready(function () {
-    console.log(typeof localStorage.getItem("balancer_data"));
     if (localStorage.getItem("balancer_data") === "null" || typeof localStorage.getItem("balancer_data") === 'object') {
       localStorage.removeItem("balancer_data");
       $.ajax({
@@ -41,7 +40,6 @@
         });
       });
     } else {
-      console.log('estoy en el segundo');
       if(localStorage.getItem("balancer_data") === "null" || typeof localStorage.getItem("balancer_data") === 'object') {
         localStorage.removeItem("balancer_data");
       }
