@@ -6,7 +6,7 @@ class Post_Balancer_Cookie
     {
         add_action('wp', [$this, 'init_cookie']);
         add_action('template_redirect',[$this,'balancer_cookie'],999);
-       // add_action('template_redirect', [$this,'dump'],9999);
+        //add_action('template_redirect', [$this,'dump'],9999);
     }
 
     public function init_cookie()
@@ -63,14 +63,17 @@ class Post_Balancer_Cookie
                     $author[] = $a->term_id;
                 }
             } else {
-                $author[] = '';
+                $author = false;
             }
 
             $array = [];
 
             $array['info']['posts'] = [$post_id]; 
             $array['info']['cats'] = $cat;
-            $array['info']['authors'] = $author;
+            if($author) {
+                $array['info']['authors'] = $author;
+            }
+            
 
             //**add info */
 
@@ -94,12 +97,13 @@ class Post_Balancer_Cookie
                     $new_cat = array_diff($user_data['info']['cats'], $data['info']['cats']);
                     $data['info']['cats'] = array_merge($new_cat,$data['info']['cats']);
                 }
-
-                if(array_diff($array['info']['authors'], $data['info']['authors']) > 0) {
-                    $new_author = array_diff($array['info']['authors'], $data['info']['authors']);
-                    $data['info']['authors'] = array_merge($new_author,$data['info']['authors']);
+                if($array['info']['authors']) {
+                    if(array_diff($array['info']['authors'], $data['info']['authors']) > 0) {
+                        $new_author = array_diff($user_data['info']['authors'], $data['info']['authors']);
+                        $data['info']['authors'] = array_merge($new_author,$data['info']['authors']);
+                    }
                 }
-
+               
                 posts_balancer_db()->update_data('balancer_session',['content' => maybe_serialize($data)],['id_session'=>$_COOKIE['balancer']],['%s'],['%s']);
             }
         }
