@@ -22,6 +22,8 @@ class Posts_Balancer_Front
     public function balancer(int $number = 6, $use_offset = true)
     {
 
+       // var_dump(balancer_cookie()->cookie_data()['posts']);
+
         $view = round(($number * intval(get_option('_balancer_percent_views'))) / 100);
         $user = round(($number * intval(get_option('_balancer_percent_user'))) / 100);
         $editorial = round(($number * intval(get_option('_balancer_percent_editorial'))) / 100);
@@ -52,7 +54,7 @@ class Posts_Balancer_Front
         $args = [
             'post_type' => get_option('balancer_editorial_post_type'),
             'status' => 'publish',
-            'include' => $query,
+            'include' => balancer_cookie()->cookie_data()['posts'] == null ? $query : array_diff($query, balancer_cookie()->cookie_data()['posts']),
             'numberposts' => $number,
             'fields' => 'ids',
             'date_query' => [
@@ -69,6 +71,7 @@ class Posts_Balancer_Front
 
             self::$offset += $number;
         }
+
         return get_posts($args); //return post ID's
 
     }
