@@ -11,6 +11,8 @@ class Posts_Balancer_Front
     {
         add_action('template_redirect', [$this, 'show_interest']);
         add_action('rest_api_init', [$this, 'show_tags']);
+
+        add_action('template_redirect',[$this,'interesting']);
     }
 
     /**
@@ -21,9 +23,6 @@ class Posts_Balancer_Front
      */
     public function balancer(int $number = 6, $use_offset = true)
     {
-
-       // var_dump(balancer_cookie()->cookie_data()['posts']);
-
         $view = round(($number * intval(get_option('_balancer_percent_views'))) / 100);
         $user = round(($number * intval(get_option('_balancer_percent_user'))) / 100);
         $editorial = round(($number * intval(get_option('_balancer_percent_editorial'))) / 100);
@@ -167,10 +166,6 @@ class Posts_Balancer_Front
         }
     }
 
-
-    /**
-     * balancer
-     */
     public function show_interest($query)
     {
         if (is_single()) {
@@ -201,6 +196,10 @@ class Posts_Balancer_Front
         ));
     }
 
+    /**
+     * @param $user_id int
+     * @param $post_id int
+     */
     public function show_interest_post($user_id, $post_id, $icon1 = null, $icon2 = null, $icon3 = null)
     {
 
@@ -243,6 +242,86 @@ class Posts_Balancer_Front
             $icons .= '<img src="' . $icon3 . '" alt="" />';
         endif;
         echo $icons;
+    }
+
+    /**
+     * Interesting
+     */
+    public function interesting($number = 4)
+    {
+        if(is_single()) {
+
+            $data = balancer_cookie()->cookie_data();
+
+            if(is_user_logged_in()) {
+
+                $user_cats = get_user_meta(get_current_user_id(),'_personalizer_taxonomys',true);
+                $user_authors = get_user_meta(get_current_user_id(),'_personalizer_authors',true);
+
+            }
+
+            $posts = $data['posts'];
+            $cats = $user_cats != '' || $user_cats != null ? $user_cats : $data['cats'];
+            $tags = $data['tags'];
+            $authors = $user_authors != '' || $user_authors != null ? $user_authors : $data['authors'];
+
+            $args = [
+                'post_type' => get_option('balancer_editorial_post_type'),
+                'status' => 'publish',
+                'orderby' => 'rand',
+                'numberposts' => $number,
+                'date_query' => [
+                    [
+                        'column' => 'post_date_gmt',
+                        'after'  => get_option('balancer_editorial_days') . ' days ago',
+                    ]
+                ]
+            ];
+
+            if($posts) {
+                $args['exclude'] = get_queried_object_id();
+            }
+
+            $args['tax_query'] = ['relation' => 'OR'];
+
+            if($cats) {
+                $args['tax_query'][] =  [
+                    'taxonomy' => get_option('balancer_editorial_taxonomy'),
+                    'field' => 'term_id',
+                    'terms' => $cats
+                ];
+            }
+
+            if($tags) {
+                $args['tax_query'][] =  [
+                    'taxonomy' => get_option('balancer_editorial_tags'),
+                    'field' => 'term_id',
+                    'terms' => $tags
+                ];
+            }
+
+            if($authors) {
+                $args['tax_query'][] =  [
+                    'taxonomy' => get_option('balancer_editorial_autor'),
+                    'field' => 'term_id',
+                    'terms' => $authors
+
+                ];
+            }
+
+            if(is_user_logged_in() && get_option('balancer_editorial_place') !== null){
+                $place = is_user_logged_in() && get_user_meta( wp_get_current_user()->ID, '_personalizer_posts',true ) !== '' ? get_user_meta( wp_get_current_user()->ID, '_personalizer_location',true ) : false;
+                if($place && get_user_meta( wp_get_current_user()->ID, '_personalizer_location',true )) {
+                    $args['tax_query'][] =  [
+                        'taxonomy' => get_option('balancer_editorial_place'),
+                        'field' => 'name',
+                        'terms' => get_user_meta( wp_get_current_user()->ID, '_personalizer_location',true )
+                    ];
+                } 
+            }
+
+            return get_posts($args);
+        }
     }
 }
 

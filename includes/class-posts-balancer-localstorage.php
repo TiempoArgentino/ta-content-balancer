@@ -19,8 +19,8 @@ class Posts_Balancer_Local_Storage
         add_action('wp_ajax_nopriv_' . $this->action, [$this, 'storage_get_data']);
         add_action('wp_ajax_' . $this->action, [$this, 'storage_get_data']);
 
-        add_action('wp_ajax_nopriv_' . $this->action, [$this, 'storage_get_front']);
-        add_action('wp_ajax_' . $this->action, [$this, 'storage_get_front']);
+        // add_action('wp_ajax_nopriv_' . $this->action, [$this, 'storage_get_front']);
+        // add_action('wp_ajax_' . $this->action, [$this, 'storage_get_front']);
 
     }
 
