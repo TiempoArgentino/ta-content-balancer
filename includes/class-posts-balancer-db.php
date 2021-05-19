@@ -79,6 +79,15 @@ class Posts_Balancer_DB
         );
         return $results;
     }
+
+    public function get_row($table,$where,$condition) {
+        global $wpdb;
+        $table_name = $wpdb->prefix . $table;
+        $results = $wpdb->get_row(
+            $wpdb->prepare("SELECT * FROM " . $table_name . " WHERE " . $where, $condition)
+        );
+        return $results;
+    }
 }
 
 function posts_balancer_db()

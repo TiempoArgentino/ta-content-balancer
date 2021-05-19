@@ -124,7 +124,7 @@ class Posts_Balancer {
 		/**
 		 * Local storage
 		 */
-		require_once plugin_dir_path( dirname(__FILE__) ).'includes/class-posts-balancer-localstorage.php';
+		//require_once plugin_dir_path( dirname(__FILE__) ).'includes/class-posts-balancer-localstorage.php';
 
 		/**
 		 * The class responsible for defining all actions that occur in the admin area.

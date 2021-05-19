@@ -17,16 +17,17 @@ class Post_Balancer_Cookie
 
     public function populate_cookie()
     {
+
+        global $wpdb;
         if (isset($_COOKIE['balancer'])) {
 
             if(is_user_logged_in()){
                 $user_id = get_current_user_id();
-
-                $result =  posts_balancer_db()->get_data_row($user_id,'user_id','balancer_session');
+                $result = posts_balancer_db()->get_row('balancer_session','user_id=%d',$user_id);
                 if($result != null) return false;
                 
             } else {
-                $result = posts_balancer_db()->get_data_row($_COOKIE['balancer'],'id_session','balancer_session');
+                $result = posts_balancer_db()->get_row('balancer_session','id_session=%s',$_COOKIE['balancer']);
                 if($result == null) {
                     
                      $data = [
@@ -38,9 +39,7 @@ class Post_Balancer_Cookie
                 } else {
                     return false;
                 }         
-            }
-
-           
+            } 
         }
 
         
@@ -48,6 +47,7 @@ class Post_Balancer_Cookie
 
     public function balancer_cookie()
     {
+        global $wpdb;
         if (is_single()) {
             
             if(!$this->populate_cookie()){
@@ -97,7 +97,7 @@ class Post_Balancer_Cookie
 
             //**add info */
 
-            $data = posts_balancer_db()->get_data_row($_COOKIE['balancer'],'id_session','balancer_session');
+            $data = $wpdb->get_row( $wpdb->prepare( "SELECT * FROM {$wpdb->prefix}balancer_session WHERE id_session = %s", $_COOKIE['balancer'] ));
             $user_data = maybe_unserialize($data->{'content'});
 
             if($data->{'content'} === '') {
@@ -131,7 +131,7 @@ class Post_Balancer_Cookie
                         }
                     }
     
-                    if($authors && $user_data['info']['authors'] != null) {
+                    if($user_data['info']['authors'] != null) {
                         if(array_diff($user_data['info']['authors'], $new_data['info']['authors']) > 0) {
                             $new_author = array_diff($user_data['info']['authors'], $new_data['info']['authors']);
                             $new_data['info']['authors'] = array_merge($new_author,$new_data['info']['authors']);
@@ -147,13 +147,14 @@ class Post_Balancer_Cookie
 
     public function cookie_data()
     {
+        global $wpdb;
         if(isset($_COOKIE['balancer'])) {
 
             if(is_user_logged_in()) {
                 $user_id = get_current_user_id();
-                $data = posts_balancer_db()->get_data_row($user_id,'user_id','balancer_session');
+                $data = posts_balancer_db()->get_row('balancer_session','user_id=%d',$user_id);
             } else {
-                $data = posts_balancer_db()->get_data_row($_COOKIE['balancer'],'id_session','balancer_session');
+                $data = posts_balancer_db()->get_row('balancer_session','id_session=%s',$_COOKIE['balancer']);
             }
 
             $user_data = maybe_unserialize($data->{'content'});
