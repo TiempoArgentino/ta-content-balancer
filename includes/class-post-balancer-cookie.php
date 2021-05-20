@@ -17,15 +17,24 @@ class Post_Balancer_Cookie
 
     public function populate_cookie()
     {
-
-        global $wpdb;
         if (isset($_COOKIE['balancer'])) {
 
             if(is_user_logged_in()){
                 $user_id = get_current_user_id();
-                $result = posts_balancer_db()->get_row('balancer_session','user_id=%d',$user_id);
-                if($result != null) return false;
-                
+                $result = posts_balancer_db()->get_row('balancer_session','id_session=%s',$_COOKIE['balancer']);
+                if($result == null && $result->{'user_id'} == null) {
+                    
+                    $data = [
+                       'id_session' => $_COOKIE['balancer'],
+                       'user_id' => $user_id,
+                       'content' => ''
+                   ];
+                   return posts_balancer_db()->insert_data('balancer_session',$data,['%s','%s']);
+               } else if($result != null && $result->{'user_id'} == null) {
+                    return posts_balancer_db()->update_data('balancer_session',['user_id' => $user_id],['id_session'=>$_COOKIE['balancer']],['%d'],['%d']);
+               } else {
+                   return false;
+               }
             } else {
                 $result = posts_balancer_db()->get_row('balancer_session','id_session=%s',$_COOKIE['balancer']);
                 if($result == null) {
@@ -55,7 +64,7 @@ class Post_Balancer_Cookie
             }
 
             if(is_user_logged_in()) {
-                posts_balancer_db()->update_data('balancer_session',['user_id' => get_current_user_id()],['id_session'=>$_COOKIE['balancer']],['%d'],['%d']);
+               posts_balancer_db()->update_data('balancer_session',['user_id' => get_current_user_id()],['id_session'=>$_COOKIE['balancer']],['%d'],['%d']);
             }
 
             $post_id = get_queried_object_id();
