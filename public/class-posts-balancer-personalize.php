@@ -16,7 +16,7 @@ class Posts_Balancer_Personalize
 
         add_action('personalize_before',[$this,'is_log']);
 
-        add_action('template_redirect',[$this,'get_tags']);
+        //add_action('template_redirect',[$this,'get_tags']);
 
 
     }

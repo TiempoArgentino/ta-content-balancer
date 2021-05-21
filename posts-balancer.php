@@ -16,7 +16,7 @@
  * Plugin Name:       Balancer
  * Plugin URI:        https://genosha.com.ar
  * Description:       Post balancer
- * Version:           1.3
+ * Version:           1.3.1
  * Author:            Genosha
  * Author URI:        https://genosha.com.ar
  * License:           GPL-2.0+
@@ -35,7 +35,7 @@ if ( ! defined( 'WPINC' ) ) {
  * Start at version 1.0.0 and use SemVer - https://semver.org
  * Rename this for your plugin and update it as you release new versions.
  */
-define( 'POSTS_BALANCER_VERSION', '1.3' );
+define( 'POSTS_BALANCER_VERSION', '1.3.1' );
 
 /**
  * The code that runs during plugin activation.
