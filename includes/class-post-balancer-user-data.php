@@ -68,21 +68,26 @@ class Post_Balancer_User_Data{
         }
         else {
             $row = self::get_subscriber_balancer_row($user_id);
-            $data = maybe_unserialize($row->{'content'});
+            $data = maybe_unserialize($row->content);
         }
-        return $data ?? false;
+
+        return $data === null ? false : $data;
     }
 
     /**
-    *   Returns the terms related to a post that are used in the balancer
+    *   Returns the data related to a post that is used in the balancer
     *   @param int $post_id
     *   @return mixed[]
     */
+    // WARNING: Este metodo no corresponde a esta clase. Incluso podria ser una function suelta
     static public function get_post_balanceable_data($post_id){
         // TODO: Check de errores y tipos de datos. Existe el post? etc.
+        // TODO: No se esta guardando la location???
         $categories = get_the_terms($post_id, get_option('balancer_editorial_taxonomy'));
         $tags = get_the_terms($post_id, get_option('balancer_editorial_tags'));
         $authors = get_the_terms($post_id, get_option('balancer_editorial_autor'));
+        $topics = get_the_terms($post_id, get_option('balancer_editorial_topics'));
+        $locations = get_the_terms($post_id, get_option('balancer_editorial_place'));
 
         $balanceable_data = array(
             'info'  => array(
@@ -90,6 +95,8 @@ class Post_Balancer_User_Data{
                 'cats'      => is_array($categories) ? wp_list_pluck($categories, 'term_id') : [],
                 'tags'      => is_array($tags) ? wp_list_pluck($tags, 'term_id') : [],
                 'authors'   => is_array($authors) ? wp_list_pluck($authors, 'term_id') : [],
+                'topics'    => is_array($topics) ? wp_list_pluck($topics, 'term_id') : [],
+                'locations' => is_array($locations) ? wp_list_pluck($locations, 'term_id') : [],
             ),
         );
 
@@ -100,13 +107,25 @@ class Post_Balancer_User_Data{
     *   Merges an array of balancer data with another.
     *   @param mixed[] $dataA                                                   Array with main data
     *   @param mixed[] $dataB                                                   Array with data to append
+    *   @param int $max                                                         Max amount of items the result can have.
+    *                                                                           Pass -1 to indicate no limit
     */
-    static public function merge_data($dataA, $dataB){
+    static public function merge_data($dataA, $dataB, $max = -1){
         $new_data = $dataA ?? [ 'info' => [] ];
         $data_slugs = ['posts', 'cats', 'tags', 'authors', 'location', 'topics'];
         if($dataB) {
-            foreach ($data_slugs as $data_slug) // array_unique to remove duplicated. array_values to reset indexes
-                $new_data['info'][$data_slug] = array_values( array_unique( array_merge($dataB['info'][$data_slug] ?? [], $dataA['info'][$data_slug] ?? []), SORT_REGULAR) );
+            foreach ($data_slugs as $data_slug){ // array_unique to remove duplicated. array_values to reset indexes
+                $data_db = $dataA['info'][$data_slug] ?? [];
+                $data_post = $dataB['info'][$data_slug] ?? [];
+                $merged_data = array_values( array_unique( array_merge($data_db, $data_post), SORT_REGULAR) );
+                $merged_amount = count($merged_data); // 7
+                if($max == -1)
+                    $new_data['info'][$data_slug] = $merged_data;
+                else {
+                    $dif_max = $merged_amount - $max;
+                    $new_data['info'][$data_slug] = $dif_max > 0 ? array_slice($merged_data, $dif_max) : $merged_data;
+                }
+            }
         }
         return $new_data;
     }
@@ -133,7 +152,7 @@ class Post_Balancer_User_Data{
         if( self::$current_user_is_subscriber ){ // DB + Post data
             $balancer_data = self::get_subscriber_balancer_data(get_current_user_id());
             self::$current_user_data = $balancer_data ? $balancer_data : null;
-            self::$subscriber_has_db_row = $balancer_data ? true : false;
+            self::$subscriber_has_db_row = $balancer_data !== null ? true : false;
         }
     }
 
@@ -163,7 +182,7 @@ class Post_Balancer_User_Data{
     *   @param int $post_id
     */
     static public function update_current_user_based_on_post($post_id){
-        self::$current_user_data = self::merge_data(self::$current_user_data, self::get_post_balanceable_data($post_id));
+        self::$current_user_data = self::merge_data(self::$current_user_data, self::get_post_balanceable_data($post_id), 30);
     }
 
     /**

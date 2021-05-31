@@ -137,11 +137,15 @@ class Posts_Balancer_Personalize{
         if(!self::user_is_personalized($user_id))
             return null;
 
+        $authors_meta = get_user_meta($user_id, '_personalizer_topics', true);
+        $cats_meta = get_user_meta($user_id, '_personalizer_taxonomy', true);
+        $topics_meta = get_user_meta($user_id, '_personalizer_topics', true);
+        
         return array(
-            'authors'           => get_user_meta($user_id, '_personalizer_authors', true),
+            'authors'           => array_map( fn($author) => intval($author), is_array($authors_meta) ? $authors_meta : [] ),
             'location'          => get_user_meta($user_id, '_personalizer_location', true),
-            'cats'              => get_user_meta($user_id, '_personalizer_taxonomy', true),
-            'topics'            => get_user_meta($user_id, '_personalizer_topics', true),
+            'cats'              => array_map( fn($cat) => intval($cat), is_array($cats_meta) ? $cats_meta : [] ),
+            'topics'            => array_map( fn($topic) => intval($topic), is_array($topics_meta) ? $topics_meta : [] ),
         );
     }
 
