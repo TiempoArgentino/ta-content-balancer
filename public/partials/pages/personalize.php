@@ -36,8 +36,8 @@ do_action( 'personalize_before');
             <div class="row">
                 <div class="col-12 mx-auto">
                     <div id="categories-form" class="d-flex mt-5">
-                    <?php if(!empty(balancer_personalize()->get_tags())): ?>
-                        <?php foreach(balancer_personalize()->get_tags() as $key => $val):?>
+                    <?php if(!empty(Posts_Balancer_Personalize::get_tags())): ?>
+                        <?php foreach(Posts_Balancer_Personalize::get_tags() as $key => $val):?>
                             <label><input type="checkbox" name="categorie[]" <?php echo is_array(get_user_meta(wp_get_current_user()->ID,'_personalizer_topics',true)) && in_array($key,get_user_meta(wp_get_current_user()->ID,'_personalizer_topics',true)) ? 'checked="checked"' : ''?> class="categorie" value="<?php echo $key?>" /> <?php echo $val?></label>
                             <?php endforeach;?>
                     <?php endif;?>  
@@ -65,8 +65,8 @@ do_action( 'personalize_before');
             <div class="row">
                 <div class="col-12 mx-auto">
                     <div id="posts-personalize-form" class="d-flex mt-5">
-                    <?php if(!empty(balancer_personalize()->get_taxonomies())):?>
-                        <?php foreach(balancer_personalize()->get_taxonomies() as $key => $val):?>
+                    <?php if(!empty(Posts_Balancer_Personalize::get_taxonomies())):?>
+                        <?php foreach(Posts_Balancer_Personalize::get_taxonomies() as $key => $val):?>
                         <?php 
                             $args = [
                                 'post_type' => get_option('balancer_editorial_post_type'),
@@ -121,8 +121,8 @@ do_action( 'personalize_before');
             <div class="row">
                 <div class="col-12 mx-auto">
                     <div id="emotions-form" class="d-flex mt-5 ">
-                    <?php if(!empty(balancer_personalize()->get_authors())):?>
-                        <?php foreach(balancer_personalize()->get_authors() as $key => $val):?>
+                    <?php if(!empty(Posts_Balancer_Personalize::get_authors())):?>
+                        <?php foreach(Posts_Balancer_Personalize::get_authors() as $key => $val):?>
                         <?php 
                             $args = [
                                 'post_type' => get_option('balancer_editorial_post_type'),

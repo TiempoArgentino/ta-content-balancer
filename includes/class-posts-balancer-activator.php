@@ -43,7 +43,7 @@ class Posts_Balancer_Activator
 	{
 		flush_rewrite_rules();
 	}
-	/** 
+	/**
 	 * Create Tables
 	 */
 	public static function create_tables($table, $sql)
@@ -75,7 +75,7 @@ class Posts_Balancer_Activator
 	{
 		$ads_table = 'balancer_session';
 
-		$sql =  ' ( `id` INT NOT NULL AUTO_INCREMENT , `user_id` INT(11) NULL , `id_session` VARCHAR(255) NOT NULL , `content` TEXT NOT NULL, PRIMARY KEY (`id`))';
+		$sql =  ' ( `user_id` INT(11) NOT NULL, `content` TEXT NOT NULL, PRIMARY KEY (`user_id`) )';
 
 		self::create_tables($ads_table, $sql);
 	}

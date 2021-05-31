@@ -1,0 +1,214 @@
+<?php
+
+// TODO: Revisar donde se utiliza la funcion balancer_cookie y actualizar acordemente
+class Post_Balancer_User_Data{
+    static private $initialized = false;
+    /**
+    *   The balancer data for the current user. This user can be logged or not.
+    *   Is the one that gets sent to the client.
+    */
+    static private $current_user_data = null;
+    static private $subscriber_has_db_row = false;
+    static private $current_user_personalized = false;
+    static private $current_user_is_subscriber = false;
+
+    static public function initialize(){
+        if(self::$initialized == true)
+            return false;
+        self::$initialized = true;
+
+        add_action('wp_enqueue_scripts', [self::class,'enqueue_front_scripts']);
+        // TODO: Add an easy way for a developer to manipulate the user balancer data
+        // maybe with hooks, passing data like is_logged, has_personalized, post_data, etc.
+        add_action('wp_head', [self::class,'set_current_user_data']);
+        add_action('wp_head', [self::class,'update_current_user_data']);
+        // TODO: This step should be optional. Maybe its not wanted in the front
+        // For this, some of the logic perfomed on the front should be done in the backend too
+        add_action('wp_head', [self::class,'send_balancer_data_to_client']);
+
+        return true;
+    }
+
+    /**
+    *   Front scripts enqueue
+    *   Sends a variable to the client that contains the data to use to balance the
+    *   articles fetch. If the user is logged in, it contains data from the DB.
+    *   If he isn't, the data will be from the current post. If not in a post, data will be empty
+    */
+    static public function enqueue_front_scripts(){
+        wp_enqueue_script('storage_ajax_script', plugin_dir_url(__FILE__) . 'js/balancer-storage.js', array('jquery'), '1.0', true);
+    }
+
+    // TODO: Este method deberia estar en class-posts-balancer-db.php
+    /**
+    *
+    *   Returns an user row in the balancer table
+    *   @param int $user_id                                                     ID of the user for whom the retrieve the data
+    *   @return mixed[]
+    */
+    static public function get_subscriber_balancer_row($user_id){
+        return posts_balancer_db()->get_row('balancer_session','user_id=%d',$user_id);
+    }
+
+    /**
+    *   Returns the data stored from the user navigation or personalizer
+    *   @param int $user_id                                                     ID of the user for whom the retrieve the data
+    *   @return mixed[]|false                                                   Returns false if the user has no balancer record in DB
+    */
+    static public function get_subscriber_balancer_data($user_id){
+        $data = Posts_Balancer_Personalize::get_user_personalizer_data($user_id);
+        if($data){ // personalized
+            // WARNING:
+            // TODO: Esto se hacer porque el personalizador guarda el nombre del lugar. Este deberia guardar la id y este mapeo se deberia evitar
+            if(isset($data['location']) && $data['location']){
+                $term = get_term_by('name', $data['location'], get_option('balancer_editorial_place'));
+                $data['locations'] = $term ? [$term->term_id] : [];
+            }
+            $data = array( 'info' => $data );
+        }
+        else {
+            $row = self::get_subscriber_balancer_row($user_id);
+            $data = maybe_unserialize($row->{'content'});
+        }
+        return $data ?? false;
+    }
+
+    /**
+    *   Returns the terms related to a post that are used in the balancer
+    *   @param int $post_id
+    *   @return mixed[]
+    */
+    static public function get_post_balanceable_data($post_id){
+        // TODO: Check de errores y tipos de datos. Existe el post? etc.
+        $categories = get_the_terms($post_id, get_option('balancer_editorial_taxonomy'));
+        $tags = get_the_terms($post_id, get_option('balancer_editorial_tags'));
+        $authors = get_the_terms($post_id, get_option('balancer_editorial_autor'));
+
+        $balanceable_data = array(
+            'info'  => array(
+                'posts'     => [$post_id],
+                'cats'      => is_array($categories) ? array_map( fn($cat) => $cat->term_id, $categories ) : [],
+                'tags'      => is_array($tags) ? array_map( fn($tag) => $tag->term_id, $tags ) : [],
+                'authors'   => is_array($authors) ? array_map( fn($author) => $author->term_id, $authors ) : [],
+            ),
+        );
+
+        return $balanceable_data;
+    }
+
+    /**
+    *   Merges an array of balancer data with another.
+    *   @param mixed[] $dataA                                                   Array with main data
+    *   @param mixed[] $dataB                                                   Array with data to append
+    */
+    static public function merge_data($dataA, $dataB){
+        $new_data = $dataA ?? [ 'info' => [] ];
+        $data_slugs = ['posts', 'cats', 'tags', 'authors', 'location', 'topics'];
+        if($dataB) {
+            foreach ($data_slugs as $data_slug) // array_unique to remove duplicated. array_values to reset indexes
+                $new_data['info'][$data_slug] = array_values( array_unique( array_merge($dataB['info'][$data_slug] ?? [], $dataA['info'][$data_slug] ?? []), SORT_REGULAR) );
+        }
+        return $new_data;
+    }
+
+    /**
+    *   Inserts a balancer row for a user in the DB
+    *   @param int $user_id
+    *   @param string $content                                                  The balancer data to store for this user
+    *   @return mixed[]                                                         Returns the content from the user balancer
+    */
+    static public function insert_subscriber_balancer_row($user_id, $content = ''){
+        posts_balancer_db()->insert_data('balancer_session', array(
+            'user_id' => $user_id,
+            'content' => $content ?? '',
+        ),['%d','%s']);
+    }
+
+    /**
+    *   Stablishes the current user balancer data.
+    */
+    static public function set_current_user_data(){
+        self::$current_user_is_subscriber = is_user_logged_in();
+        self::$current_user_personalized = self::$current_user_is_subscriber && Posts_Balancer_Personalize::user_is_personalized(get_current_user_id());
+        if( self::$current_user_is_subscriber ){ // DB + Post data
+            $balancer_data = self::get_subscriber_balancer_data(get_current_user_id());
+            self::$current_user_data = $balancer_data ? $balancer_data : null;
+            self::$subscriber_has_db_row = $balancer_data ? true : false;
+        }
+    }
+
+    /**
+    *   Runs a series of functions that updates the value of $current_user_data
+    *   accordingly. It also updates the DB when requiered
+    */
+    static public function update_current_user_data(){
+        if(self::$current_user_personalized)
+            return;
+
+        self::update_current_user_based_on_current_single();
+        self::update_current_user_db();
+    }
+
+    /**
+    *   Updates the current user balancer data based with the current single post balancer data
+    *   It stores de data in $current_user_data. If no user, it only stores the current post data.
+    */
+    static public function update_current_user_based_on_current_single(){
+        if ( is_single() )// TODO: Deberia chequear si es del post type que se quiere balancear
+            self::update_current_user_based_on_post(get_queried_object_id());
+    }
+
+    /**
+    *   Updates the current user balancer data based on a post balancer data
+    *   @param int $post_id
+    */
+    static public function update_current_user_based_on_post($post_id){
+        self::$current_user_data = self::merge_data(self::$current_user_data, self::get_post_balanceable_data($post_id));
+    }
+
+    /**
+    *   If the user is logged in and isn't personalized, it saves to the DB the final state of self::$current_user_data
+    */
+    static public function update_current_user_db(){
+        if(self::$current_user_is_subscriber && !self::$current_user_personalized){
+            // TODO: Esta serializacion deberia ser abstraida a algun method en esta u otra clase.
+            $serialized_content = maybe_serialize(self::$current_user_data);
+            if(!self::$subscriber_has_db_row)
+                self::insert_subscriber_balancer_row(get_current_user_id(), $serialized_content);
+            else
+                posts_balancer_db()->update_data('balancer_session',['content' => $serialized_content],['user_id'=>get_current_user_id()],['%s'],['%d']);
+        }
+    }
+
+    /**
+    *   Sends a variable to the client that contains the data to use to balance the
+    *   articles fetch. If the user is logged in, it contains data from the DB.
+    *   If he isn't, the data will be from the current post. If not in a post, data will be empty
+    */
+    static public function send_balancer_data_to_client(){
+        $balancer_data = array(
+            'userPreferences'   => self::$current_user_data,
+            'percentages'       => array(
+                'views'     => intval(get_option('_balancer_percent_views')),
+                'user'      => intval(get_option('_balancer_percent_user')),
+                'editorial' => intval(get_option('_balancer_percent_editorial')),
+            ),
+            // WARNING: No podemos depender de una variable global para saber si el usuario esta
+            // logeado o no. Esto se deja asi para pruebas, pero lo ideal seria realizar un fetch
+            // desde el cliente para determinar si esta o no logeado.
+            'isLogged'      => self::$current_user_is_subscriber,
+        );
+        wp_localize_script( 'storage_ajax_script', 'postsBalancerData', $balancer_data );
+    }
+}
+
+Post_Balancer_User_Data::initialize();
+
+
+// WARNING: Esta funcion se llama cada vez que se quiere acceder a un metodo de la clase
+// Post_Balancer_Cookie, corriendo el __construct, que lleva a cabo tareas que solo deberian
+// ocurrir una vez.
+// function balancer_cookie()
+// {
+//     return new Post_Balancer_Cookie();
+// }

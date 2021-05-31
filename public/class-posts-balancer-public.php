@@ -107,7 +107,7 @@ class Posts_Balancer_Public {
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-posts-balancer-template.php';
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-posts-balancer-user.php';
 		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-posts-balancer-personalize.php';
-		require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-posts-balancer-front.php';
+		// require_once plugin_dir_path( dirname( __FILE__ ) ) . 'public/class-posts-balancer-front.php';
 	}
 
 }

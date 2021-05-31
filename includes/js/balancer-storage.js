@@ -1,86 +1,68 @@
 (function ($) {
-  $(document).ready(function () {
-    if (localStorage.getItem("balancer_data") === "null" || typeof localStorage.getItem("balancer_data") === 'object') {
-      localStorage.removeItem("balancer_data");
-      $.ajax({
-        type: "post",
-        url: balancer_anon_ajax.url,
-        data: {
-          action: balancer_anon_ajax.action,
-          _ajax_nonce: balancer_anon_ajax._ajax_nonce,
-          anon: balancer_anon_ajax.anon,
-          post_id: balancer_anon_ajax.post_id
+    // TODO: REMOVER LOGS
+    const WPPostsBalancer = {
+        isAvailable: typeof(Storage) !== "undefined",
+        userPreferencesLoaded: false,
+        getLocalUserPreference: function(){
+            const localPreferences = window.localStorage.getItem('taBalancerUserPreferences');
+            return localPreferences ? JSON.parse(localPreferences) : null;
         },
-        success: function (res) {
-          //console.log(res);
-          if (res !== null) {
-            localStorage.setItem("balancer_data", res);
-          }
+        setLocalUserPreference: function(userPreferences){
+            window.localStorage.setItem('taBalancerUserPreferences', JSON.stringify(userPreferences));
         },
-        error: function (res) {
-          //console.log(res);
-        }
-      }).done(function(){
-        $.ajax({
-          type: "post",
-          url: balancer_front_data_ajax.url,
-          data: {
-            action: balancer_front_data_ajax.action,
-            _ajax_nonce: balancer_front_data_ajax._ajax_nonce,
-            balancer_get: balancer_front_data_ajax.balancer_get,
-            balancer_data: JSON.parse(localStorage.getItem("balancer_data"))
-          },
-          success: function(res){
-           // console.log(res);
-            $('#your_interests').html(res);
-          },
-          error: function(res){
-            //console.log(res);
-          }
-        });
-      });
-    } else {
-      if(localStorage.getItem("balancer_data") === "null" || typeof localStorage.getItem("balancer_data") === 'object') {
-        localStorage.removeItem("balancer_data");
-      }
-      $.ajax({
-        type: "post",
-        url: balancer_anon_ajax_get.url,
-        data: {
-          action: balancer_anon_ajax_get.action,
-          _ajax_nonce: balancer_anon_ajax_get._ajax_nonce,
-          data: balancer_anon_ajax_get.data,
-          storage: JSON.parse(localStorage.getItem("balancer_data")),
-          post_id: balancer_anon_ajax_get.post_id
-        },
-        success: function (res) {
-          if (res !== null) {
-            localStorage.setItem("balancer_data", res);
-          }
-        },
-        error: function (res) {
-          // console.log(res);
-        }
-      }).done(function(){
-        $.ajax({
-          type: "post",
-          url: balancer_front_data_ajax.url,
-          data: {
-            action: balancer_front_data_ajax.action,
-            _ajax_nonce: balancer_front_data_ajax._ajax_nonce,
-            balancer_get: balancer_front_data_ajax.balancer_get,
-            balancer_data: JSON.parse(localStorage.getItem("balancer_data"))
-          },
-          success: function(res){
-           // console.log(res);
-            $('#your_interests').html(res);
+        appendToLocalUserPreference: function(newPreferences){
+            if(!newPreferences)
+                return;
 
-          },
-          error: function(res){
-           // console.log(res);
-          }
-        });
-      });
-    }
-  });
+            let updatedPreferences = this.getLocalUserPreference();
+            
+            if(!updatedPreferences){
+                updatedPreferences = newPreferences;
+            }
+            else if( newPreferences.info ){
+                for (var preferenceSlug in newPreferences.info) {
+                    if(!newPreferences.info.hasOwnProperty(preferenceSlug))
+                        continue;
+
+                    const newPreferenceIds = newPreferences.info[preferenceSlug];
+                    // let updatedPreferenceIds = updatedPreferences.info[preferenceSlug];
+                    if(!updatedPreferences.info[preferenceSlug]) // This preference is not stored in the localstorage, save all.
+                        updatedPreferences.info[preferenceSlug] = newPreferenceIds;
+                    else{
+                        updatedPreferences.info[preferenceSlug] = updatedPreferences.info[preferenceSlug].concat(newPreferenceIds);
+                        updatedPreferences.info[preferenceSlug] = updatedPreferences.info[preferenceSlug].filter( (id,index) => updatedPreferences.info[preferenceSlug].indexOf(id) == index ); // remove duplicates
+                    }
+
+                    // console.log(`UPDATED ${preferenceSlug}`, updatedPreferences.info[preferenceSlug]);
+                }
+            }
+
+            this.setLocalUserPreference(updatedPreferences);
+        },
+        loadUserPreferences: async function(){
+            if(this.userPreferencesLoaded)
+                return this.getLocalUserPreference();
+            if(!this.isAvailable)
+                throw "noLocalStorage";
+
+            console.log('balancerData', postsBalancerData);
+            const { userPreferences, percentages, isLogged } = postsBalancerData;
+            if(isLogged)
+                this.setLocalUserPreference(userPreferences); // Overrides every preference stored in localstorage
+            else
+                this.appendToLocalUserPreference(userPreferences); // appends to the prefences stored in local storage
+
+            console.log('USER PREFERENCES', this.getLocalUserPreference());
+            this.userPreferencesLoaded = true;
+            return this.getLocalUserPreference();
+        },
+    };
+
+    window.postsBalancer = {
+        loadPreferences: WPPostsBalancer.loadUserPreferences.bind(WPPostsBalancer),
+        getLocalPreferences: WPPostsBalancer.getLocalUserPreference.bind(WPPostsBalancer),
+        setLocalUserPreference: WPPostsBalancer.setLocalUserPreference.bind(WPPostsBalancer),
+    };
+
+    // WPPostsBalancer.loadUserPreferences();
 })(jQuery);
