@@ -87,9 +87,9 @@ class Post_Balancer_User_Data{
         $balanceable_data = array(
             'info'  => array(
                 'posts'     => [$post_id],
-                'cats'      => is_array($categories) ? array_map( fn($cat) => $cat->term_id, $categories ) : [],
-                'tags'      => is_array($tags) ? array_map( fn($tag) => $tag->term_id, $tags ) : [],
-                'authors'   => is_array($authors) ? array_map( fn($author) => $author->term_id, $authors ) : [],
+                'cats'      => is_array($categories) ? wp_list_pluck($categories, 'term_id') : [],
+                'tags'      => is_array($tags) ? wp_list_pluck($tags, 'term_id') : [],
+                'authors'   => is_array($authors) ? wp_list_pluck($authors, 'term_id') : [],
             ),
         );
 
