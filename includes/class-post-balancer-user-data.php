@@ -56,15 +56,16 @@ class Post_Balancer_User_Data{
     *   @return mixed[]|false                                                   Returns false if the user has no balancer record in DB
     */
     static public function get_subscriber_balancer_data($user_id){
-        $data = Posts_Balancer_Personalize::get_user_personalizer_data($user_id);
-        if($data){ // personalized
+        $data = null;
+        $personalized = Posts_Balancer_Personalize::get_user_personalizer_data($user_id);
+        if($personalized){ // personalized
             // WARNING:
             // TODO: Esto se hacer porque el personalizador guarda el nombre del lugar. Este deberia guardar la id y este mapeo se deberia evitar
-            if(isset($data['location']) && $data['location']){
-                $term = get_term_by('name', $data['location'], get_option('balancer_editorial_place'));
-                $data['locations'] = $term ? [$term->term_id] : [];
+            if(isset($personalized['location']) && $personalized['location']){
+                $term = get_term_by('name', $personalized['location'], get_option('balancer_editorial_place'));
+                $personalized['locations'] = $term ? [$term->term_id] : [];
             }
-            $data = array( 'info' => $data );
+            $data = array( 'info' => $personalized );
         }
         else {
             $row = self::get_subscriber_balancer_row($user_id);
@@ -151,7 +152,7 @@ class Post_Balancer_User_Data{
         if( self::$current_user_is_subscriber ){ // DB + Post data
             $balancer_data = self::get_subscriber_balancer_data(get_current_user_id());
             self::$current_user_data = $balancer_data ? $balancer_data : null;
-            self::$subscriber_has_db_row = $balancer_data !== null ? true : false;
+            self::$subscriber_has_db_row = $balancer_data === false ? false : true;
         }
     }
 
