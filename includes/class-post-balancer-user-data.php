@@ -82,7 +82,6 @@ class Post_Balancer_User_Data{
     // WARNING: Este metodo no corresponde a esta clase. Incluso podria ser una function suelta
     static public function get_post_balanceable_data($post_id){
         // TODO: Check de errores y tipos de datos. Existe el post? etc.
-        // TODO: No se esta guardando la location???
         $categories = get_the_terms($post_id, get_option('balancer_editorial_taxonomy'));
         $tags = get_the_terms($post_id, get_option('balancer_editorial_tags'));
         $authors = get_the_terms($post_id, get_option('balancer_editorial_autor'));
@@ -112,7 +111,7 @@ class Post_Balancer_User_Data{
     */
     static public function merge_data($dataA, $dataB, $max = -1){
         $new_data = $dataA ?? [ 'info' => [] ];
-        $data_slugs = ['posts', 'cats', 'tags', 'authors', 'location', 'topics'];
+        $data_slugs = ['posts', 'cats', 'tags', 'authors', 'locations', 'topics'];
         if($dataB) {
             foreach ($data_slugs as $data_slug){ // array_unique to remove duplicated. array_values to reset indexes
                 $data_db = $dataA['info'][$data_slug] ?? [];
