@@ -2,6 +2,7 @@
     // TODO: REMOVER LOGS
     const WPPostsBalancer = {
         isAvailable: typeof(Storage) !== "undefined",
+        maxPreferenceItems: postsBalancerData?.maxPreferenceItems ?? 30,
         userPreferencesLoaded: false,
         getLocalUserPreference: function(){
             const localPreferences = window.localStorage.getItem('taBalancerUserPreferences');
@@ -15,7 +16,7 @@
                 return;
 
             let updatedPreferences = this.getLocalUserPreference();
-            
+
             if(!updatedPreferences){
                 updatedPreferences = newPreferences;
             }
@@ -31,6 +32,12 @@
                     else{
                         updatedPreferences.info[preferenceSlug] = updatedPreferences.info[preferenceSlug].concat(newPreferenceIds);
                         updatedPreferences.info[preferenceSlug] = updatedPreferences.info[preferenceSlug].filter( (id,index) => updatedPreferences.info[preferenceSlug].indexOf(id) == index ); // remove duplicates
+                    }
+
+                    if(this.maxPreferenceItems > 0 && updatedPreferences.info[preferenceSlug]?.length) {
+                        difMax = updatedPreferences.info[preferenceSlug].length - this.maxPreferenceItems;
+                        if(difMax > 0)
+                            updatedPreferences.info[preferenceSlug] = updatedPreferences.info[preferenceSlug].slice(difMax);
                     }
 
                     // console.log(`UPDATED ${preferenceSlug}`, updatedPreferences.info[preferenceSlug]);

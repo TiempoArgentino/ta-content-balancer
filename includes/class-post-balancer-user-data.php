@@ -2,16 +2,49 @@
 
 // TODO: Revisar donde se utiliza la funcion balancer_cookie y actualizar acordemente
 class Post_Balancer_User_Data{
-    static private $initialized = false;
     /**
+    *   @property bool $initialized
+    *   Whether the module has been initialized or not
+    */
+    static private $initialized = false;
+
+    /**
+    *   @property mixed[] $current_user_data
     *   The balancer data for the current user. This user can be logged or not.
     *   Is the one that gets sent to the client.
     */
     static private $current_user_data = null;
+
+    /**
+    *   @property bool $current_user_personalized
+    *   Indicates if the current user has personalized tastes.
+    */
     static private $subscriber_has_db_row = false;
+
+    /**
+    *   @property bool $current_user_personalized
+    *   Indicates if the current user has personalized tastes.
+    */
     static private $current_user_personalized = false;
+
+    /**
+    *   @property bool $current_user_is_subscriber
+    *   Indicates if the current user is logged in and a subscriber
+    */
     static private $current_user_is_subscriber = false;
 
+    /**
+    *   @property int $max_preferences_items
+    *   The maximum amounts of balancer items to stored for each preference
+    *   Set to -1 for no limit.
+    */
+    static private $max_preferences_items = 30;
+
+    /**
+    *   @method initialize
+    *   Initializes the module, stablishing variables, running neccesary scripts
+    *   and hooking to wordpress actions/filters
+    */
     static public function initialize(){
         if(self::$initialized == true)
             return false;
@@ -182,7 +215,7 @@ class Post_Balancer_User_Data{
     *   @param int $post_id
     */
     static public function update_current_user_based_on_post($post_id){
-        self::$current_user_data = self::merge_data(self::$current_user_data, self::get_post_balanceable_data($post_id), 30);
+        self::$current_user_data = self::merge_data(self::$current_user_data, self::get_post_balanceable_data($post_id), self::$max_preferences_items);
     }
 
     /**
@@ -216,6 +249,7 @@ class Post_Balancer_User_Data{
             // logeado o no. Esto se deja asi para pruebas, pero lo ideal seria realizar un fetch
             // desde el cliente para determinar si esta o no logeado.
             'isLogged'      => self::$current_user_is_subscriber,
+            'maxPreferenceItems'    => self::$max_preferences_items,
         );
         wp_localize_script( 'storage_ajax_script', 'postsBalancerData', $balancer_data );
     }
