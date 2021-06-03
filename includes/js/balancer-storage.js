@@ -11,13 +11,19 @@
         setLocalUserPreference: function(userPreferences){
             window.localStorage.setItem('taBalancerUserPreferences', JSON.stringify(userPreferences));
         },
+
+        /**
+        *   @method appendToLocalUserPreference
+        *   It appends a set of balancer data to the localStorage stored one.
+        *   @param {mixed[]} newPreferences                                     The preferences the append to the localStorage data
+        */
         appendToLocalUserPreference: function(newPreferences){
-            if(!newPreferences)
+            if(!newPreferences || !newPreferences.info)
                 return;
 
             let updatedPreferences = this.getLocalUserPreference();
 
-            if(!updatedPreferences){
+            if(!updatedPreferences || !updatedPreferences.info){
                 updatedPreferences = newPreferences;
             }
             else if( newPreferences.info ){
@@ -46,29 +52,47 @@
 
             this.setLocalUserPreference(updatedPreferences);
         },
+
+        /**
+        *   @method getUserPreference
+        *   @return {mixed[]}
+        *   Returns the user preferences. If it is logged in, returns the data sent
+        *   to the client from postsBalancerData. If not logged, returns the
+        *   localStorage data.
+        */
+        getUserPreference: function(){
+            let { userPreferences, percentages, isLogged } = postsBalancerData;
+            if( isLogged )
+                return userPreferences; // from backend
+            return this.getLocalUserPreference(); // from localStorage
+        },
+
+        /**
+        *   @method loadUserPreferences
+        *   @return {mixed[]|null}
+        *   Prepares the user preference data for logged an not logged in users.
+        */
         loadUserPreferences: async function(){
             if(this.userPreferencesLoaded)
-                return this.getLocalUserPreference();
+                return this.getUserPreference();
             if(!this.isAvailable)
-                throw "noLocalStorage";
+                return null;
 
-            console.log('balancerData', postsBalancerData);
-            const { userPreferences, percentages, isLogged } = postsBalancerData;
-            if(isLogged)
-                this.setLocalUserPreference(userPreferences); // Overrides every preference stored in localstorage
-            else
+            let { userPreferences, percentages, isLogged } = postsBalancerData;
+
+            if(!isLogged)
                 this.appendToLocalUserPreference(userPreferences); // appends to the prefences stored in local storage
 
-            console.log('USER PREFERENCES', this.getLocalUserPreference());
+            console.log('USER PREFERENCES', this.getUserPreference());
             this.userPreferencesLoaded = true;
-            return this.getLocalUserPreference();
+            return await this.loadUserPreferences();
         },
     };
 
     window.postsBalancer = {
         loadPreferences: WPPostsBalancer.loadUserPreferences.bind(WPPostsBalancer),
-        getLocalPreferences: WPPostsBalancer.getLocalUserPreference.bind(WPPostsBalancer),
-        setLocalUserPreference: WPPostsBalancer.setLocalUserPreference.bind(WPPostsBalancer),
+        // getLocalPreferences: WPPostsBalancer.getLocalUserPreference.bind(WPPostsBalancer),
+        // setLocalUserPreference: WPPostsBalancer.setLocalUserPreference.bind(WPPostsBalancer),
     };
 
     // WPPostsBalancer.loadUserPreferences();
