@@ -30,6 +30,21 @@ class Posts_Balancer_Options
         require_once plugin_dir_path( dirname( __FILE__ ) ) . 'admin/partials/posts-balancer-admin-display.php';
     }
 
+    /**
+    *   Returns the percentages set through the admin panel
+    *   @return int[] {
+    *       @property int views
+    *       @property int user
+    *       @property int editorial
+    *   }
+    */
+    static public function get_percentages(){
+        return array(
+            'views'     => intval(get_option('_balancer_percent_views')),
+            'user'      => intval(get_option('_balancer_percent_user')),
+            'editorial' => intval(get_option('_balancer_percent_editorial')),
+        );
+    }
 
     public function percent()
     {

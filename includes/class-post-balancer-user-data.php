@@ -16,8 +16,9 @@ class Post_Balancer_User_Data{
     static private $current_user_data = null;
 
     /**
-    *   @property bool $current_user_personalized
-    *   Indicates if the current user has personalized tastes.
+    *   @property bool $subscriber_has_db_row
+    *   Inidicates if the curren user has a row in the balancer table. This value
+    *   is stablished after the `set_current_user_data` method is executed
     */
     static private $subscriber_has_db_row = false;
 
@@ -70,6 +71,15 @@ class Post_Balancer_User_Data{
     */
     static public function enqueue_front_scripts(){
         wp_enqueue_script('storage_ajax_script', plugin_dir_url(__FILE__) . 'js/balancer-storage.js', array('jquery'), '1.0', true);
+    }
+
+    /**
+    *
+    *   Returns the current user data
+    *   @return mixed[]
+    */
+    static public function get_current_user_data(){
+        return self::$current_user_data;
     }
 
     // TODO: Este method deberia estar en class-posts-balancer-db.php
@@ -215,7 +225,7 @@ class Post_Balancer_User_Data{
     *   @param int $post_id
     */
     static public function update_current_user_based_on_post($post_id){
-        self::$current_user_data = self::merge_data(self::$current_user_data, self::get_post_balanceable_data($post_id), self::$max_preferences_items);
+        self::$current_user_data = self::merge_data(self::get_current_user_data(), self::get_post_balanceable_data($post_id), self::$max_preferences_items);
     }
 
     /**
@@ -224,7 +234,7 @@ class Post_Balancer_User_Data{
     static public function update_current_user_db(){
         if(self::$current_user_is_subscriber && !self::$current_user_personalized){
             // TODO: Esta serializacion deberia ser abstraida a algun method en esta u otra clase.
-            $serialized_content = maybe_serialize(self::$current_user_data);
+            $serialized_content = maybe_serialize(self::get_current_user_data());
             if(!self::$subscriber_has_db_row)
                 self::insert_subscriber_balancer_row(get_current_user_id(), $serialized_content);
             else
@@ -239,12 +249,8 @@ class Post_Balancer_User_Data{
     */
     static public function send_balancer_data_to_client(){
         $balancer_data = array(
-            'userPreferences'   => self::$current_user_data,
-            'percentages'       => array(
-                'views'     => intval(get_option('_balancer_percent_views')),
-                'user'      => intval(get_option('_balancer_percent_user')),
-                'editorial' => intval(get_option('_balancer_percent_editorial')),
-            ),
+            'userPreferences'   => self::get_current_user_data(),
+            'percentages'       => Posts_Balancer_Options::get_percentages(),
             // WARNING: No podemos depender de una variable global para saber si el usuario esta
             // logeado o no. Esto se deja asi para pruebas, pero lo ideal seria realizar un fetch
             // desde el cliente para determinar si esta o no logeado.
