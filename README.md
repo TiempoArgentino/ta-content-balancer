@@ -7,8 +7,8 @@ queries personalizadas que resultan en posts de interés para el usuario.
 
 # Requisitos
 
-- Wordpress >= 5.0
-- PHP >= 8
+- Wordpress >= 5.7.x
+- PHP >= 7.4.x
 
 # Instalación y activación
 
@@ -44,7 +44,7 @@ El plugin permite modificar sus variables a través del panel de administración
 de Wordpress en **Ajustes => Balancer**. En esta pantalla se pueden modificar
 los siguientes datos:
 
-#### Post Type y Taxonomies
+#### <a id="main-configuration"></a>Post Type y Taxonomies
 
 Establece sobre qué `post type` se trabaja, y que datos de estos recopila (`taxonomies`).
 
@@ -168,3 +168,17 @@ Se puede acceder a los porcentajes utilizando la función
 */
 const percentages = window.postsBalancerData.percentages;
 ```
+
+### Personalizador
+
+El personalizador es utilizado para que los usuarios del sitio puedan definir sus preferencias. Para ofrecerle opciones al usuario, el personalizador, trabaja en base a las opciones antes definidas en la configuración del plugin; **[(click para ver)](#main-configuration)**,
+
+El personalizador cuenta con un front que se puede personalizar. Dentro del plugin, en la carpeta **`public/partials/pages`** esta el template principal. Para poder sobre escribir este template, se tiene que crear una carpeta llamada **`balancer`** dentro del theme principal del sitio (o child theme en caso de existir), dentro de esta carpeta se debe copiar la carpeta **`pages`** con el archivo **`personalize.php`**. Este es el archivo que podemos modificar a nuestro gusto según necesitemos.
+
+Al activar el plugin, este crea automáticamente una página llamada **Personalize** en el menú de Páginas de Wordpress. Esta página desparece al desactivar el plugin. De esta página se puede modificar el título y slug de ser necesario, sin afectar el funcionamiento.
+
+En la carpeta **`public/js`** encontramos el archivo **`personalizer-balancer-ajax.js`**, el cual comunica el front con el backend para la personalización del perfil de usuario. En caso de necesitar modificarlo, copiarlo en la carpeta creada en su theme principal e incluirlo con el archivo **`functions.php`** del theme correspondiente.
+
+Cómo incluir un archivo js a su theme: [Wordpress Codex](https://developer.wordpress.org/themes/basics/including-css-javascript/)
+
+Para que no haya errores el momento de hacer la sobre escritura, primero debe quitar el original del plugin, con la función **`wp_dequeue_script`**, haciendo el llamado desde su archivo **`functions.php`**, más información: [Codex Wordpress](https://developer.wordpress.org/reference/functions/wp_dequeue_script/). El manejador (handle) tiene por nombre **`personalizer_ajax_script`**.
