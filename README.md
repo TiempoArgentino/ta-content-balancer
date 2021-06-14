@@ -91,7 +91,6 @@ de ese action, los datos se pueden acceder utilizando el método estático
 los siguientes datos:
 
 ```php
-<?php
 /**
 *   @property mixed[] {
 *       @property mixed[] info {
@@ -113,7 +112,6 @@ Se puede acceder a los porcentajes utilizando el método
 `Posts_Balancer_Personalize::get_percentages`
 
 ```php
-<?php
 /**
 *   @property int[] {
 *       @property int views
