@@ -70,7 +70,7 @@ Estos criterios son:
 - **Editorial Percent**: Los mas recientes que no entren en las 2 categorías anteriores.
 
 
-# Los datos se guardaron, ¿Ahora que?
+# ¿Cómo utilizar los datos recopilados?
 
 Los datos balanceados del usuario actual se pueden acceder desde `PHP` y
 `Javascript`. Estos se pueden utilizar para hacer queries que devuelvan posts en
