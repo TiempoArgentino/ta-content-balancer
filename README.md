@@ -187,3 +187,5 @@ En la carpeta **`public/js`** encontramos el archivo **`personalizer-balancer-aj
 Cómo incluir un archivo js a su theme: [Wordpress Codex](https://developer.wordpress.org/themes/basics/including-css-javascript/)
 
 Para que no haya errores el momento de hacer la sobre escritura, primero debe quitar el original del plugin, con la función **`wp_dequeue_script`**, haciendo el llamado desde su archivo **`functions.php`**, más información: [Codex Wordpress](https://developer.wordpress.org/reference/functions/wp_dequeue_script/). El manejador (handle) tiene por nombre **`personalizer_ajax_script`**.
+
+[Ver video informativo](https://drive.google.com/file/d/1lx2L_qFblr05K9hUrAs5X6JRikOSawoH/view?usp=sharing)
